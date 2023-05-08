@@ -7,10 +7,11 @@ import os
 import keyboard
 import pyttsx3
 
-imgIndex = 0
+imgIndex = 1
 model = YOLO("yolov8n.pt")  # load a pretrained model (recommended for training)
 imgSaved = False
 
+# establish tts model
 tts_engine = pyttsx3.init()
 tts_engine.setProperty('voice', 'com.apple.speech.synthesis.voice.Alex')
 tts_engine.setProperty('rate', 150)
@@ -18,6 +19,7 @@ tts_engine.setProperty('rate', 150)
 tts_engine.say("Press space with your mouse on an image to get started.")
 tts_engine.runAndWait()
 
+# current database of items
 itemList = {0: 'person', 1: 'bicycle', 2: 'car', 3: 'motorcycle', 4: 'airplane', 5: 'bus', 6: 'train', 7: 'truck',
             8: 'boat', 9: 'traffic light', 10: 'fire hydrant', 11: 'stop sign', 12: 'parking meter', 13: 'bench',
             14: 'bird', 15: 'cat', 16: 'dog', 17: 'horse', 18: 'sheep', 19: 'cow', 20: 'elephant', 21: 'bear',
@@ -40,11 +42,14 @@ def on_key_press(key):
 
     if key == Key.space:
         try:
+            #finds coordinates of cursor on screen
             cursorX, cursorY = pyautogui.position()
             print("Button pressed")
 
+            # establishes the screenshot region
             ss_region = (cursorX - 410, cursorY - 355, cursorX + 20, cursorY + 110)
 
+            # this if statement is to ensure that this is only ran once every run of the program
             if not imgSaved:
                 ss_img = pyautogui.screenshot(region=ss_region)
 
@@ -52,28 +57,47 @@ def on_key_press(key):
                 results = model.predict(ss_img, project="runs", show=True, save=True, save_conf=True,
                                     save_txt=True)  # predict on an image
 
-                if imgIndex != 0:
-                    imgIndex += 2
+                # gets the index of the "predicts"
+                with open("predictIndex.txt", "r") as file:
+                    imgIndex = int(file.readline())
 
-                with open(f"runs/predict{imgIndex}/labels/image0.txt", "r") as prediction:
-                    firstLine = prediction.readline()
-                    objectId = firstLine[:2]
-                    objectName = itemList[int(objectId)]
-                    tts_engine.say(f"The objects in your specified region is a {objectName}")
-                    tts_engine.runAndWait()
+                # if imgIndex == 1, this is the first prediction
+                if imgIndex == 1:
+                    with open(f"runs/predict/labels/image0.txt", "r") as prediction:
+                        firstLine = prediction.readline()
+                        objectId = firstLine[:2]
+                        objectName = itemList[int(objectId)]
+                        tts_engine.say(f"The objects in your specified region is a {objectName}")
+                        tts_engine.runAndWait()
 
-                print(f"runs/predicts{imgIndex}/labels/image0.txt")
-                print("Screenshot saved to disk")
+                # every other prediction after the first one, known from imgIndex
+                else:
+                    with open(f"runs/predict{imgIndex}/labels/image0.txt", "r") as prediction:
+                        firstLine = prediction.readline()
+                        objectId = firstLine[:2]
+                        objectName = itemList[int(objectId)]
+                        tts_engine.say(f"The objects in your specified region is a {objectName}")
+                        tts_engine.runAndWait()
+
+                    print("Screenshot saved to disk")
+
+                # writes the imgIndex but added once
+                with open("predictIndex.txt", "w") as file:
+                    imgIndex += 1
+                    file.write(str(imgIndex))
 
                 imgSaved = True
 
+        # checks if AI model does not detect an object, which then will say a message
         except FileNotFoundError:
             print("No object detected in database")
+            tts_engine.say("No object detected in database.")
+            tts_engine.runAndWait()
 
 
 def on_key_release(key):
     print("Button released")
 
-
+# includes a listener that looks for any key pressed
 with Listener(on_press=on_key_press, on_release=on_key_release) as listener:
     listener.join()
