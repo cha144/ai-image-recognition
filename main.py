@@ -7,7 +7,8 @@ import os
 import keyboard
 import pyttsx3
 
-imgIndex = 1
+# file must always start with 1
+imgIndex = 0
 model = YOLO("yolov8n.pt")  # load a pretrained model (recommended for training)
 imgSaved = False
 
@@ -40,9 +41,14 @@ def on_key_press(key):
     global imgSaved
     global itemList
 
-    if key == Key.space:
+    if key == Key.tab:
         try:
-            #finds coordinates of cursor on screen
+            # gets the index of the "predicts"
+            with open("predictIndex.txt", "r") as file:
+                imgIndex = int(file.readline())
+
+            print(f"Image index is {imgIndex}")
+            # finds coordinates of cursor on screen
             cursorX, cursorY = pyautogui.position()
             print("Button pressed")
 
@@ -53,22 +59,26 @@ def on_key_press(key):
             if not imgSaved:
                 ss_img = pyautogui.screenshot(region=ss_region)
 
-                print(imgIndex)
                 results = model.predict(ss_img, project="runs", show=True, save=True, save_conf=True,
                                     save_txt=True)  # predict on an image
 
-                # gets the index of the "predicts"
-                with open("predictIndex.txt", "r") as file:
-                    imgIndex = int(file.readline())
-
                 # if imgIndex == 1, this is the first prediction
                 if imgIndex == 1:
-                    with open(f"runs/predict/labels/image0.txt", "r") as prediction:
+                    with open("runs/predict/labels/image0.txt", "r") as prediction:
                         firstLine = prediction.readline()
                         objectId = firstLine[:2]
+                        print(objectId)
                         objectName = itemList[int(objectId)]
+
+                        # writes the imgIndex but added once
+                        with open('predictIndex.txt', 'w') as file:
+                            file.write(str(imgIndex + 1))
+                            print("Index written to file:", imgIndex)
+
                         tts_engine.say(f"The objects in your specified region is a {objectName}")
                         tts_engine.runAndWait()
+
+                        imgIndex = imgIndex + 1
 
                 # every other prediction after the first one, known from imgIndex
                 else:
@@ -76,27 +86,32 @@ def on_key_press(key):
                         firstLine = prediction.readline()
                         objectId = firstLine[:2]
                         objectName = itemList[int(objectId)]
+
+                        with open('predictIndex.txt', 'w') as file:
+                            file.write(str(imgIndex + 1))
+                            print("Index written to file:", imgIndex)
+
                         tts_engine.say(f"The objects in your specified region is a {objectName}")
                         tts_engine.runAndWait()
-
-                    print("Screenshot saved to disk")
-
-                # writes the imgIndex but added once
-                with open("predictIndex.txt", "w") as file:
-                    imgIndex += 1
-                    file.write(str(imgIndex))
 
                 imgSaved = True
 
         # checks if AI model does not detect an object, which then will say a message
         except FileNotFoundError:
             print("No object detected in database")
+
+            with open('predictIndex.txt', 'w') as file:
+                file.write(str(imgIndex + 1))
+                print("Index written to file:", imgIndex)
+
+            imgIndex = imgIndex + 1
             tts_engine.say("No object detected in database.")
             tts_engine.runAndWait()
 
 
 def on_key_release(key):
     print("Button released")
+
 
 # includes a listener that looks for any key pressed
 with Listener(on_press=on_key_press, on_release=on_key_release) as listener:
