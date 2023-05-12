@@ -55,7 +55,7 @@ def on_key_press(key):
 
             ss_img = pyautogui.screenshot(region=ss_region)
 
-            results = model.predict(ss_img, project="runs", show=True, save=True, save_conf=True,
+            results = model.predict(ss_img, project="runs", save=True, save_conf=True,
                                     save_txt=True)  # predict on an image
 
             with open("runs/predict/labels/image0.txt", "r") as prediction:
