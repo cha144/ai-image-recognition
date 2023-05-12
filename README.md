@@ -2,7 +2,7 @@
 **Heavy work in  progress, performance may vary on computers**
 
 Aimed to help the visually impaired, this tool allows users to put images on their screen
-through an AI image recognition model, which then will use text-to-speech to express that object.
+through an AI image recognition model, which then will use text-to-speech to express that object. **This tool will never store any data or pictures that are sent through the model.**
 
 This program uses **Ultralytics YOLO8**, the acclaimed real-time object detection and image segmentation model.
 This tool would not have been possible without it, and you can access it here:
