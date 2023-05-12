@@ -6,12 +6,12 @@ through an AI image recognition model, which then will use text-to-speech to exp
 
 This program uses **Ultralytics YOLO8**, the acclaimed real-time object detection and image segmentation model.
 This tool could not have been possible without it, and you can access it here. 
-https.//github.com/ultralytics/ultralytics
+https://github.com/ultralytics/ultralytics
 
-The object/image dataset used for the model is **COCO** (Common Objects in Context - https.//cocodataset.org/),
-which only contains 80 object categories. More categories will be added in the near future.
+The object/image dataset used for the model is **COCO** (Common Objects in Context - https://cocodataset.org/),
+which only roughly 80 object categories. More categories will be added in the near future.
 
-These are the following categories.
+Currently, these are the following categories:
 1. bicycle 
 2. car  
 3. motorcycle  
