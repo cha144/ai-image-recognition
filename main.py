@@ -6,6 +6,8 @@ import time
 import os
 import keyboard
 import pyttsx3
+import sys
+import shutil
 
 # file must always start with 1
 imgIndex = 0
@@ -19,6 +21,7 @@ tts_engine.setProperty('rate', 150)
 
 tts_engine.say("Press space with your mouse on an image to get started.")
 tts_engine.runAndWait()
+del tts_engine
 
 # current database of items
 itemList = {0: 'person', 1: 'bicycle', 2: 'car', 3: 'motorcycle', 4: 'airplane', 5: 'bus', 6: 'train', 7: 'truck',
@@ -50,30 +53,44 @@ def on_key_press(key):
             # establishes the screenshot region
             ss_region = (cursorX - 410, cursorY - 355, cursorX + 20, cursorY + 110)
 
-            # this if statement is to ensure that this is only ran once every run of the program
-            if not imgSaved:
-                ss_img = pyautogui.screenshot(region=ss_region)
+            ss_img = pyautogui.screenshot(region=ss_region)
 
-                results = model.predict(ss_img, project="runs", show=True, save=True, save_conf=True,
+            results = model.predict(ss_img, project="runs", show=True, save=True, save_conf=True,
                                     save_txt=True)  # predict on an image
 
-                with open("runs/predict/labels/image0.txt", "r") as prediction:
-                    firstLine = prediction.readline()
-                    objectId = firstLine[:2]
-                    print(objectId)
-                    objectName = itemList[int(objectId)]
+            with open("runs/predict/labels/image0.txt", "r") as prediction:
+                firstLine = prediction.readline()
+                objectId = firstLine[:2]
+                print(objectId)
+                objectName = itemList[int(objectId)]
 
-                    tts_engine.say(f"The objects in your specified region is a {objectName}")
-                    tts_engine.runAndWait()
+                tts_engine1 = pyttsx3.init()
+                tts_engine1.setProperty('voice', 'com.apple.speech.synthesis.voice.Alex')
+                tts_engine1.setProperty('rate', 150)
 
-                imgSaved = True
+                tts_engine1.say(f"The objects in your specified region is a {objectName}")
+                tts_engine1.runAndWait()
+
+                time.sleep(3)
+                shutil.rmtree("runs/predict")
+                print("Directory deleted!")
+                sys.exit(0)
 
         # checks if AI model does not detect an object, which then will say a message
         except FileNotFoundError:
             print("No object detected in database")
 
-            tts_engine.say("No object detected in database.")
-            tts_engine.runAndWait()
+            tts_engine1 = pyttsx3.init()
+            tts_engine1.setProperty('voice', 'com.apple.speech.synthesis.voice.Alex')
+            tts_engine1.setProperty('rate', 150)
+
+            tts_engine1.say("No object detected in database.")
+            tts_engine1.runAndWait()
+
+            time.sleep(0.1)
+            shutil.rmtree("runs/predict")
+            print("Directory deleted!")
+            sys.exit(0)
 
 
 def on_key_release(key):
